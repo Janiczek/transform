@@ -3,7 +3,7 @@
 **tl;dr:** Transform your data structures recursively from the bottom up. Very
 useful eg. for writing compiler passes.
 
-Inspired by [various](https://twitter.com/puffnfresh/status/1080328018181025792) [tweets](https://twitter.com/acid2/status/1095481366786068480) and my use for something like this in my compiler project.
+Inspired by [various](https://twitter.com/puffnfresh/status/1080328018181025792) [tweets](https://twitter.com/acid2/status/1095481220153204736) and my use for something like this in my compiler project.
 
 ----
 

@@ -64,10 +64,10 @@ But you could of course make it skip some of the children by not applying the fu
 
 ---
 
-**WARNING: I'm not 100% sure but I think using this function with composed
+**WARNING:** I'm not 100% sure but I think using this function with composed
 transformations (`simplifyNegate >> simplifyPlus`) _that don't just shrink but
 also expand_ might not always lead to the fixpoint. To be sure, **use
-`transformAll`\*\* and transformations combined with `orList` or a similar helper
+`transformAll`** and transformations combined with `orList` or a similar helper
 function.
 
 ---

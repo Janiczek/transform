@@ -17,7 +17,7 @@ type Expr
     | List_ (List Expr)
 ```
 
-You also have a few optimizations you compiler can do:
+You also have a few optimizations your compiler can do:
 
 ```elm
 simplifyDoubleNegate : Expr -> Expr

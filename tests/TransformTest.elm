@@ -299,21 +299,49 @@ allTransformations =
     ]
 
 
+exprDepthLimit =
+    10
+
+
 exprGenerator : Generator Expr
 exprGenerator =
+    exprGenerator_ 0
+
+
+exprGenerator_ n =
     let
-        lazyExprGenerator =
-            Random.lazy (\() -> exprGenerator)
+        e =
+            Random.lazy (\() -> exprGenerator_ (n + 1))
     in
-    -- TODO We're overflowing the stack... :( elm-test, get your stuff together!
-    Random.uniform
-        (Random.map Int_ (Random.int Random.minInt Random.maxInt))
-        [ Random.map Negate lazyExprGenerator
-        , Random.map2 Plus lazyExprGenerator lazyExprGenerator
-        , Random.int 0 2
-            |> Random.andThen (\length -> Random.map List_ (Random.list length lazyExprGenerator))
-        ]
-        |> Random.andThen identity
+    if n == exprDepthLimit then
+        -- no more branching
+        intGenerator
+
+    else
+        Random.uniform
+            intGenerator
+            [ negateGenerator e
+            , plusGenerator e
+            , listGenerator e
+            ]
+            |> Random.andThen identity
+
+
+intGenerator =
+    Random.map Int_ (Random.int Random.minInt Random.maxInt)
+
+
+negateGenerator e =
+    Random.map Negate e
+
+
+plusGenerator e =
+    Random.map2 Plus e e
+
+
+listGenerator e =
+    Random.int 0 3
+        |> Random.andThen (\length -> Random.map List_ (Random.list length e))
 
 
 exprShrinker : Shrinker Expr

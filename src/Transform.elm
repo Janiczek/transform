@@ -302,9 +302,9 @@ This is how it could look:
 
     children
         recursiveChildren
-        (Plus (Int_ 1) (Negate (Int_ 10)))
+        (Plus (Int_ 1) (Negate (Int_ 2)))
     -->
-        [ Plus (Int_ 1) (Int_ -10)
+        [ Plus (Int_ 1) (Negate (Int_ 2))
         , Int_ 1
         , Negate (Int_ 2)
         , Int_ 2

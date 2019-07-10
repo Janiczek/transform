@@ -1,5 +1,6 @@
 module Transform exposing
     ( transformOnce, transformAll
+    , children
     , or, orList, orList_
     , toMaybe, fromMaybe
     )
@@ -21,6 +22,11 @@ transformation function you want to run at all levels of the data structure.
 @docs transformOnce, transformAll
 
 
+# Getting all children
+
+@docs children
+
+
 # Combining transformations
 
 @docs or, orList, orList_
@@ -31,6 +37,8 @@ transformation function you want to run at all levels of the data structure.
 @docs toMaybe, fromMaybe
 
 -}
+
+-- TODO think about renaming this package to Recurse or something
 
 
 {-| Runs the transformation function on **all** the nodes of your recursive
@@ -267,3 +275,48 @@ fromMaybe : (a -> Maybe a) -> a -> a
 fromMaybe fn value =
     fn value
         |> Maybe.withDefault value
+
+
+{-| Gets all the children of the value.
+
+Needs a function to tell it which children can be recursed to.
+Note this function is similar in function but different in type from the
+`recurse` function you'd give to `transformOnce` or `transformAll`.
+
+This is how it could look:
+
+    recursiveChildren : (Expr -> List Expr) -> Expr -> List Expr
+    recursiveChildren fn expr =
+        case expr of
+            Int_ int ->
+                []
+
+            Negate e ->
+                fn e
+
+            Plus left right ->
+                fn left ++ fn right
+
+            List_ es ->
+                List.concatMap fn es
+
+    children
+        recursiveChildren
+        (Plus (Int_ 1) (Negate (Int_ 10)))
+    -->
+        [ Plus (Int_ 1) (Int_ -10)
+        , Int_ 1
+        , Negate (Int_ 2)
+        , Int_ 2
+        ]
+
+-}
+children : ((a -> List a) -> a -> List a) -> a -> List a
+children recurse expr =
+    let
+        helper : a -> List a
+        helper expr_ =
+            expr_
+                :: recurse helper expr_
+    in
+    helper expr

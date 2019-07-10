@@ -1,5 +1,6 @@
 module TransformTest exposing
-    ( fromMaybeTest
+    ( childrenTest
+    , fromMaybeTest
     , orListTest
     , orList_Test
     , toMaybeTest
@@ -378,3 +379,43 @@ maybeExtraOr a b =
 
     else
         a
+
+
+recursiveChildren : (Expr -> List Expr) -> Expr -> List Expr
+recursiveChildren fn expr =
+    case expr of
+        Int_ int ->
+            []
+
+        Negate e ->
+            fn e
+
+        Plus left right ->
+            fn left ++ fn right
+
+        List_ es ->
+            List.concatMap fn es
+
+
+smallExpr : Expr
+smallExpr =
+    Plus
+        (Int_ 1)
+        (Negate (Int_ 2))
+
+
+childrenTest : Test
+childrenTest =
+    describe "Transform.children"
+        [ test "example from README" <|
+            \() ->
+                Transform.children
+                    recursiveChildren
+                    smallExpr
+                    |> Expect.equal
+                        [ smallExpr
+                        , Int_ 1
+                        , Negate (Int_ 2)
+                        , Int_ 2
+                        ]
+        ]

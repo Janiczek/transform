@@ -3,7 +3,7 @@
 **tl;dr:** Transform your data structures recursively from the bottom up. Very
 useful eg. for writing compiler passes.
 
-Inspired by [various](https://twitter.com/puffnfresh/status/1080328018181025792) [tweets](https://twitter.com/acid2/status/1095481220153204736) and my use for something like this in my compiler project.
+Inspired by [various](https://twitter.com/puffnfresh/status/1080328018181025792) [tweets](https://twitter.com/acid2/status/1095481220153204736) and my use for something like this in [`elm-in-elm`](https://github.com/elm-in-elm/compiler).
 
 ----
 
@@ -136,6 +136,42 @@ simplifiedAst
 
 (By the way, the functions here are general enough to work on anything, not just
 on custom types. Feel free to use it on records, for example!)
+
+----
+
+Another thing this library can do is use a similar recursion helper to get
+all the descendants (children, their children, etc.).
+
+```elm
+recursiveChildren : (Expr -> List Expr) -> Expr -> List Expr
+recursiveChildren fn expr =
+    case expr of
+        Int_ int ->
+            []
+
+        Negate e ->
+            fn e
+
+        Plus left right ->
+            fn left ++ fn right
+
+        List_ es ->
+            List.concatMap fn es
+
+
+children
+    recursiveChildren
+    (Plus (Int_ 1) (Negate (Int_ 10)))
+-->
+    [ Plus (Int_ 1) (Int_ -10)
+    , Int_ 1
+    , Negate (Int_ 2)
+    , Int_ 2
+    ]
+```
+
+As you can see, the result of calling `children` is all the descendants of the
+original expression, in the depth order.
 
 ----
 

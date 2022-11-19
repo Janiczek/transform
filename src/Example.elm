@@ -1,6 +1,7 @@
 module Example exposing
     ( Expr(..)
     , recurse
+    , simplifiedExpr
     , simplifyAll
     , simplifyDoubleNegate
     , simplifyNegate

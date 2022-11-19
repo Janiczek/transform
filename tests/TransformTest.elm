@@ -19,7 +19,6 @@ import Expect
 import Fuzz exposing (Fuzzer)
 import Random exposing (Generator)
 import Random.List
-import Shrink exposing (Shrinker)
 import Test exposing (..)
 import Transform
 
@@ -72,6 +71,7 @@ transformAllTest =
                         , List_
                             [ Negate
                                 (Int_ 8)
+                            , Negate (Negate (Int_ 3))
                             , Plus
                                 (Int_ 1)
                                 (Negate
@@ -86,7 +86,7 @@ transformAllTest =
                         (List_
                             [ Int_ 7
                             , List_
-                                [ Int_ -8, Int_ 9 ]
+                                [ Int_ -8, Int_ 3, Int_ 9 ]
                             ]
                         )
         , fuzz2 exprFuzzer transformationsListFuzzer "result of transformAll doesn't change if run through one more transformOnce" <|
@@ -117,6 +117,11 @@ transformAllTest =
                         Example.recurse
                         (Transform.orList_ transformationsList)
                     |> Expect.equal afterAll
+        , test "Example from Example.elm" <|
+            \() ->
+                Example.simplifiedExpr
+                    |> Expect.equal
+                        (List_ [ Int_ 1, Int_ -2, Int_ 3, Int_ 4, Int_ -5, Int_ -6, Int_ -7, List_ [ Int_ -8, Int_ 9 ] ])
         ]
 
 
@@ -253,13 +258,6 @@ fromMaybeTest =
         ]
 
 
-exprFuzzer : Fuzzer Expr
-exprFuzzer =
-    Fuzz.custom
-        exprGenerator
-        exprShrinker
-
-
 transformationFuzzer : Fuzzer (Expr -> Expr)
 transformationFuzzer =
     allTransformations
@@ -273,23 +271,14 @@ maybeTransformationFuzzer =
         |> Fuzz.map Transform.toMaybe
 
 
-transformationsListGenerator : Generator (List (Expr -> Expr))
-transformationsListGenerator =
-    Random.List.shuffle allTransformations
-
-
 transformationsListFuzzer : Fuzzer (List (Expr -> Expr))
 transformationsListFuzzer =
-    Fuzz.custom
-        transformationsListGenerator
-        Shrink.noShrink
+    Fuzz.shuffledList allTransformations
 
 
 combinedTransformationFuzzer : Fuzzer (Expr -> Maybe Expr)
 combinedTransformationFuzzer =
-    Fuzz.custom
-        (Random.map Transform.orList_ transformationsListGenerator)
-        Shrink.noShrink
+    Fuzz.map Transform.orList_ transformationsListFuzzer
 
 
 allTransformations : List (Expr -> Expr)
@@ -304,72 +293,45 @@ exprDepthLimit =
     10
 
 
-exprGenerator : Generator Expr
-exprGenerator =
-    exprGenerator_ 0
+exprFuzzer : Fuzzer Expr
+exprFuzzer =
+    exprFuzzer_ 0
 
 
-exprGenerator_ n =
+exprFuzzer_ : Int -> Fuzzer Expr
+exprFuzzer_ n =
     let
         e =
-            Random.lazy (\() -> exprGenerator_ (n + 1))
+            Fuzz.lazy (\() -> exprFuzzer_ (n + 1))
     in
     if n == exprDepthLimit then
         -- no more branching
-        intGenerator
+        intFuzzer
 
     else
-        Random.uniform
-            intGenerator
-            [ negateGenerator e
-            , plusGenerator e
-            , listGenerator e
+        Fuzz.oneOf
+            [ intFuzzer
+            , negateFuzzer e
+            , plusFuzzer e
+            , listFuzzer e
             ]
-            |> Random.andThen identity
 
 
-intGenerator =
-    Random.map Int_ (Random.int Random.minInt Random.maxInt)
+intFuzzer =
+    Fuzz.map Int_ Fuzz.int
 
 
-negateGenerator e =
-    Random.map Negate e
+negateFuzzer e =
+    Fuzz.map Negate e
 
 
-plusGenerator e =
-    Random.map2 Plus e e
+plusFuzzer e =
+    Fuzz.map2 Plus e e
 
 
-listGenerator e =
-    Random.int 0 3
-        |> Random.andThen (\length -> Random.map List_ (Random.list length e))
-
-
-exprShrinker : Shrinker Expr
-exprShrinker expr =
-    let
-        nestedExpr : Shrinker Expr
-        nestedExpr =
-            Shrink.merge
-                exprShrinker
-                Shrink.noShrink
-    in
-    case expr of
-        Int_ int ->
-            Shrink.map Int_ (Shrink.int int)
-
-        Negate e ->
-            nestedExpr e
-
-        Plus e1 e2 ->
-            Shrink.merge
-                (always (nestedExpr e1))
-                (always (nestedExpr e2))
-                expr
-
-        List_ es ->
-            Shrink.list nestedExpr es
-                |> Shrink.map List_
+listFuzzer e =
+    Fuzz.listOfLengthBetween 0 3 e
+        |> Fuzz.map List_
 
 
 maybeExtraOr : Maybe a -> Maybe a -> Maybe a

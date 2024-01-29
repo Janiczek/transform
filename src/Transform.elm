@@ -277,7 +277,7 @@ fromMaybe fn value =
         |> Maybe.withDefault value
 
 
-{-| Gets all the children of the value.
+{-| Gets all the children of the value (and the value itself).
 
 Needs a function to tell it which children can be recursed to.
 Note this function is similar in function but different in type from the

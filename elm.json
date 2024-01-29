@@ -3,7 +3,7 @@
     "name": "Janiczek/transform",
     "summary": "Transform recursive data structures from the bottom up",
     "license": "BSD-3-Clause",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "exposed-modules": [
         "Transform"
     ],
@@ -13,7 +13,7 @@
     },
     "test-dependencies": {
         "elm/random": "1.0.0 <= v < 2.0.0",
-        "elm-explorations/test": "2.0.1 <= v < 3.0.0",
-        "elm-community/random-extra": "3.2.0 <= v < 4.0.0"
+        "elm-community/random-extra": "3.2.0 <= v < 4.0.0",
+        "elm-explorations/test": "2.0.1 <= v < 3.0.0"
     }
 }
